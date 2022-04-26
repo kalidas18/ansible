@@ -1,0 +1,236 @@
+CONFIGURATION MANAGEMENT TOOL ex, chef, puppet, salt, ansible
+
+	->Agentless, use SSH connections
+	->parallel execution of script in all servers
+	->ansible (native code) script is called PLAYBOOK
+	->helps in 
+		configuration management
+		Application deployment
+		Task Automation
+		Infra orchestration
+
+* ARCHITECTURE
+	
+	ansible			ansible.cfg			playbooks	ansible
+	inventory			.					.		clients
+		.				.					.		server 1	
+		.				.					.		server 2
+		....ansible master/collector/...............server 3
+				engine
+
+	-> Ipaddress or (FQDN) of the client server will be configured in the inventory file.
+	-> ansible.cfg file have the location of the inventory file
+	-> PLAYBOOKS having the cmd to execute in the client servers
+	-> connection to client from master will be by SSH connections
+
+* INSTALLATION
+
+	-> python3 is must on the ansible controller engine and client nodes.
+	-> windows can be ansible client, but windows cannot be ansible controller
+	-> 3 ways to install
+			using package manager
+			using python pip
+			using compile file
+
+  * using python pip
+		can install the specific version of ansible.
+		can install multiple version of ansible in same controller machine
+		
+	python --> multileple Virtual Env --> different ansible version
+	
+	      sudo apt update
+		  sudo apt install python3
+		  sudo apt install python3-pip
+		  python3 --version
+	
+	Dependencies:-
+			sudo apt install python3-minimal python3-virtualenv python3-dev build-essential
+	
+	VirtualEnv Setup:-
+			mkdir ansible
+			cd ansible
+			python3 -m venv myansible <any name>
+	
+	Activate Venv:-
+			source myansible/bin/activate
+	
+	To deactivate Venv:-
+			deactivate
+	
+	Install Ansible:-
+			pip3 intall -U ansible
+			ansible --version
+	
+	*Config
+		-> we can use ansible.cfg from /etc/ansible/ansible.cfg (or)
+		-> create ansible.cfg in anyplace and add environment variable by
+			export ANSIBLE_CONFIG=/var/ansible/ansible.cfg
+		-> echo $ANSIBLE_CONFIG
+	* To remove env-var
+		unset ANSIBLE_CONFIG
+		
+		-> After creating ansible.cfg, need to create hosts and add inventory path to the config file.
+				syntax for ansible.cfg file..
+					[defaults]
+					inventory = hosts
+	* Ansible Automation
+			Ansible engine use SSH connection to connect to clients
+				#using username and password
+				#using SSH keys
+		
+		sample test to verify connection		
+			
+			cmd = ansible all -m ping
+	
+*DIRECTORY STRUCTURE
+	
+	How to create different environment in the ansible hostsfile.?
+		-Create 'inventory' directory
+		-Create environment inside the directory.
+		-mention the path of the hosts file inside the ansible.cfg file #hosts file name can be anything.
+		-add the ip or domain to the hosts file and check.
+		
+		ex:- in ansible.cfg --> inventory = /home/sys-admin/Pictures/ansible/inventory/dev_hosts
+
+	* Inventory file with groups.
+		-> we can define the group in [].
+			ex:-
+				[all]
+				192.168.2.78
+				192.168.2.83
+				
+				[webserver]
+				192.168.2.80
+				192.168.2.81
+				
+			cmd = ansible all:webserver -m ping
+			
+*ANSIBLE AUTOMATION
+
+ to connect to cloud instance client, AWS -> key pairs -> import key pair. copy pub key or browse file.
+	->AD-HOC 
+	->PLAYBOOKS
+	
+	*Ad-Hoc
+		one liner cmd which perform one task on ansible clients
+	syntax-
+		ansible [group] -m shell -a [cmd]
+		
+	ex:-
+		cmd = ansible webserver -m shell -a "apt update"
+		cmd = ansible webserver -m shell -a "uptime"
+		
+ 	-> to view all modules in ansible.
+		
+		cmd = ansible-doc -l
+		cmd = ansible-doc -l >> ansible.txt = export to txt file
+		
+	 * Playbooks.
+	 	executing series of cmds.
+	
+	 * Transfer files from engine to clients.
+	 	syntax-
+			ansible [group] -m copy -a [src=source_path dest=destination_path]
+		
+		cmd = ansible webserver -m copy -a "src=/home/sys-admin/Desktop/temp.txt dest=/tmp"
+	
+	-> copy content as a new file.
+		
+		cmd = ansible webserver -m copy -a "content= this is my file dest=/tmp/temp.txt"
+		
+	*Files and folder management.
+		->user can create file or directory on ansible client from ansible controller.
+		syntax-
+			ansible webserver -m file   -a "path=file/dir destination state=<state>"
+		
+		createfile-
+			ansible webserver -m file -a "path=file/dir destination state=touch"
+		Delete file-
+			ansible webserver -m file -a "path=file/dir destination state=absent"
+			
+			cmd = ansible webserver -m file -a "dest=/home/sys-admin/Desktop/test.txt state=touch mode=0775"
+			
+			cmd = ansible webserver -m file -a "dest=/home/sys-admin/Desktop/folder state=directory"
+	
+	*Install packages.
+		-> can install/uninstall using package manager on ansible clients.
+		
+		syntax-
+			ansible [group] -m yum/apt -a "name=<package-name> state=<state>"
+			cmd = ansible webserver -m shell -a "sudo yum list installed | grep nginx"
+
+to install package	cmd = ansible webserver -m yum -a "name=nginx state=present"
+			
+		-> how to pass the root access to cmd
+			
+					cmd = ansible webserver -m yum -a "name=git state=present" -b
+to update package	cmd	= ansible webserver -m yum -a "name=git state=latest" -b
+	
+state=
+	present - will install the package
+	absent - will uninstall the package.
+	latest - will update the package to latest version
+	etc..
+	
+*ANSIBLE MODULES, VARIABLES AND FACTS.
+	
+	*Modules.
+		*SetUp module-
+			#used to get facts while executing playbooks
+	*Facts-
+		1.Default fact
+		2. Custom fact
+		
+	*Custom Facts,
+		>used to get extra information about managed nodes
+		>if custom facts are on managed nodes, then custom facts are called default.
+		> it helps to reduce the code lines in playbook.
+		>helps to build env specific configuation.
+		steps to create,
+		
+			#create .fact formatted file in /etc/ansible/facts.d on managed nodes (ie. client nodes)
+			#output of fact file should be JSON and fact file should have execution permission.
+			
+*INVENTORIES
+	Types:-
+		*Static Inventory
+		*Dynamic inventory.
+		
+		*Dynamic Inventory
+			> script like shell/python
+			> preferable over static inventory
+			
+		*dynamic inventory creation
+			>ansible have dynamic inventory script for all the clouds.
+			>we can use plugins.
+				
+				#list plugins.
+				
+				cmd = ansible-doc -t inventory -l
+				
+				#Add enable plugins syntax in ansible cfg file
+					ex:
+						[inventory]
+						enable_plugins=host_list,script,auto,yaml,ini,toml 
+			
+			#to configure aws inventory we need boto3 and botocore
+			cmd = sudo pip3 install boto3
+			cmd = sudo pip3 install boto
+	
+	-> Add aws credentials to ansible by exporting as a env variable.
+		cmd = export AWS_ACCESS_KEY_ID='key'
+		cmd = export AWS_SECRET_ACCESS_KEY='key'
+	
+	IAM user -> Add user -> username -> access key/password -> group (administrator) -> create.
+	
+	-> create YML file for aws plugin.
+		plugin: amazon.aws.aws_ec2
+		
+	-> aws dynamic inventory.
+		ansible-inventory -i <plugin name> --graph
+	
+				
+					
+			
+	
+	
