@@ -247,7 +247,5 @@ state=
 					  	name: httpd
 						state: latest
 						
-						
 
-	
 	
