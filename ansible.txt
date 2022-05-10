@@ -229,8 +229,25 @@ state=
 	-> aws dynamic inventory.
 		ansible-inventory -i <plugin name> --graph
 	
-				
-					
-			
+*PLAYBOOKS
+	->To execute multiple configuration.
+	->YAML format.
+	->useful for multiple things like configuration management, 
+		
+		Sample Playbook:-
+		
+			---
+				- name: Playbook
+				  hosts: all
+				  become: yes
+				  become_user: root
+				  tasks:
+				  	- name: ensure apache is at the latest version
+					  yum:
+					  	name: httpd
+						state: latest
+						
+						
+
 	
 	
