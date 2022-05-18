@@ -12,10 +12,10 @@ CONFIGURATION MANAGEMENT TOOL ex, chef, puppet, salt, ansible
 * ARCHITECTURE
 	
 	ansible			ansible.cfg			playbooks	ansible
-	inventory			.					.		clients
-		.				.					.		server 1	
-		.				.					.		server 2
-		....ansible master/collector/...............server 3
+	inventory			.								.		clients
+		.						.								.		server 1	
+		.						.								.		server 2
+		....ansible master/collector/...............	server 3
 				engine
 
 	-> Ipaddress or (FQDN) of the client server will be configured in the inventory file.
@@ -236,16 +236,104 @@ state=
 		
 		Sample Playbook:-
 		
-			---
-				- name: Playbook
-				  hosts: all
-				  become: yes
-				  become_user: root
-				  tasks:
-				  	- name: ensure apache is at the latest version
-					  yum:
-					  	name: httpd
-						state: latest
-						
+									---
+										- name: Playbook
+										  hosts: all
+										  become: yes
+										  become_user: root
+										  tasks:
+											- name: ensure apache is at the latest version
+											  yum:
+												name: httpd
+												state: latest
+												
+												-> ask password
+										ansible-playbook playbook.yml -K
+(or)
 
+ansible-playbook playbook.yml --ask-become-pass
+
+	 cmd = ansible-playbook -i inventory -u user playbookname.yml
+	 
+	 
+	 ---
+		  - name: playbook
+			 hosts: all
+			 remote_user: ec2-user
+			 become: yes
+			 become_user: root
+			 
+				tasks:
+					- name: install apache
+						yum:
+							name: httpd
+							state: present
+							
+	cmd = ansible-playbook  playbookname.yml
 	
+	  -> we can check the syntax of the yml file by the below cmd.
+	  
+	  cmd= ansible-playbook -i inventory -u user ansible-playbook.yml --syntax-check
+	  
+	  -> to run the playbook in dry run mode (dry run - just to execute the playbook and check results without affecting the target machine)
+	  
+	  cmd = ansible-playbook playbook.yml --check
+	  
+	  -> to check in verbose mode
+	  
+	  cmd = ansible-playbook playbook.yml -v (-vvvvvv = multiple v's for more detailed verbose)
+	  
+*DEBUG_MODULE
+
+	-> if we want to print a msg when executing the task,
+	
+	sample playbook:-
+	
+									- name: playbook
+										hosts: all
+										remote_user: sys-admin
+										become: yes
+										become_user: root
+										
+										tasks:
+											- name: debug
+												debug:
+												msg: "hi, this is custom msg for the debug module"
+												
+											- name: debug
+												debug:
+												msg:
+												- " hi this is multi-line msg"
+												- " this is 2nd line of msg"
+												
+											- name: variable msg pring
+												debug:
+												msg: "host IP is - {{ inventory_hostname}}"
+					
+		* Variables in playbook
+		
+												var:
+													test: this is my file
+												- name: debug
+													debug:
+													msg: test
+				
+		* Data collection
+		
+			-> is used to store multiple values.
+										var:
+											cities:
+												- madurai
+												- chennai
+												- covai
+												- Tanjore
+											webserver: { 'apache', 'nginx', 'httpd'}
+											
+										- name: anything
+											debug:
+												msg: cities
+												
+										- name: anything
+											debug:
+												msg: webserver
+				
