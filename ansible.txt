@@ -306,7 +306,7 @@ ansible-playbook playbook.yml --ask-become-pass
 												- " hi this is multi-line msg"
 												- " this is 2nd line of msg"
 												
-											- name: variable msg pring
+											- name: variable msg ping
 												debug:
 												msg: "host IP is - {{ inventory_hostname}}"
 					
@@ -336,4 +336,125 @@ ansible-playbook playbook.yml --ask-become-pass
 										- name: anything
 											debug:
 												msg: webserver
+	
+	-> Arithmetic operation in playbook is possible with jinja syntax.
+	
+	"{{variable_name}}" is jinja syntax
+	
+	*Filter and method operation
+	
+		-> use | for inbuilt filter on variable
+		-> use . for methods on variable
+	
+	*CAMPARISON OPERATORS.
+		-> expressions are,
+				 ==, !=, >, <, >= , <= total 6 operators
+	
+	* Membership Operators.
+	    -> expressions are
+				in or not in -> output will be true or false.
+				
+	* Logical Operators
+		->  And or OR by demorgan's law
+		
+	*Conditional Statement
+		-> "when" is like "if" in other language.
+		-> only execute the task if condition is true.
+		
+	*HANDLER IN ANSIBLE.
+		
+	*LOOPS IN Ansible
+		
+		-> Loops is helpful to iterate items
+		-> helpful to do many things in one task, lot of packages install, repeat etc.
+		
+		> Standard loops with "with_items"
+				
+					example;
+						  - name: loops
+							hosts: all
+							remote_user: username
+							become: 'yes'
+							become_user: root
+							
+							var:
+								alpha: [ 'a', 'b', 'c', 'd' ]
+								numbers: [ 1, 2, 3, 4 ]
+								
+							tasks:
+							  - name: add users in one go
+								user:
+									name: "{{ with.item}}"
+									state: present
+									group: "users"
+								with_items
+									- testuser1
+									- testuser2
+		> Multiple iterate with "with_items"
+							
+							tasks:
+								- name: multiple with items
+								  state: present
+							with_items
+								  - { name: 'testuser3', groups: 'nobody' }
+								  - { name: 'testuser4', groups: 'root' }
+		
+		> Randon choice loops
+		
+		> Do-until loops - run task until condition is met
+			default value for retry is '3' and delay is '5'
+			
+				example:
+					-name: apache is running
+					 service:
+						name: httpd
+						state: started
+					register: result
+					until: result.changed == true
+					retries: 10
+					delay: 5
+					
+	* To install multiple packages.
+	
+		> using loops
+			example:
+			
+				- name: using loop multiple package install
+				  hosts: all
+				  user:
+				  become: 'yes'
+				  become_user: root
+				  
+				  tasks:
+					- name: install multiple package
+					  apt:
+						name: "{{ item }}"
+						state: present
+					  loop:
+						- apache
+						- openssl-devel
+						- unzip
+						- wget
+	
+	*Tags in Ansible.
+		
+			> used to execute particular task in ansible playbook selectively.
+			
+			example:
+				- name: tags
+				  debug:
+					msg: this is first message.
+				   tags:
+						- first
+				- name: tags
+				   debug:
+						msg: thisi is second messange.
+					tags:
+						- second
+						
+				cmd = ansible-playbook --tags first (execute only task named as first)
+				cmd = ansible-playbook --skip-tags first (execute the task except having tags as first)
+				
+				
+				
 				
